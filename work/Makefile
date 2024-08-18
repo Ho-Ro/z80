@@ -1,9 +1,6 @@
-CC = clang
+CC=gcc
 
-# when using gcc remove CFLAGS -Wclass-varargs and -Wunsequenced
-# CC = gcc
-
-CFLAGS=-I../ \
+CFLAGS_clang=-I../ \
 	-std=c++11 \
 	-Wall \
 	-Wfloat-equal \
@@ -16,13 +13,35 @@ CFLAGS=-I../ \
 	-Wunsequenced \
 	-Werror
 
-all:	z80-execute test.bin
+CFLAGS=-I../ \
+	-std=c++11 \
+	-Wall \
+	-Wfloat-equal \
+	-Wshadow \
+	-Wunused-variable \
+	-Wsign-conversion \
+	-Wtype-limits \
+	-Wsequence-point
 
-z80-execute: z80-execute.cpp ../z80.hpp
-	$(CC) $(CFLAGS) $< -o$@ -lstdc++
+LDFLAGS=
 
-test.bin: test.asm
-	@z80asm  -l -i $< -o $@
 
-test: z80-execute test.bin
-	@./z80-execute test.bin
+all:	z80-execute
+
+
+
+z80-execute: z80-execute.o kk_ihex_read.o
+	$(CC) $(LDFLAGS) -o$@ $^ -lstdc++
+
+z80-execute.o: z80-execute.cpp ../z80.hpp
+	$(CC) $(CFLAGS) -c $< -o$@
+
+kk_ihex_read.o: kk_ihex_read.cpp kk_ihex_read.h kk_ihex.h
+	$(CC) $(CFLAGS) -c $< -o$@
+
+
+
+.PHONY: clean
+clean:
+	rm -rf z80-execute *.o
+

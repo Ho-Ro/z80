@@ -1,0 +1,8 @@
+test-out
+test.bin
+z80-asm
+z80-execute
+
+*.hex
+*.z80
+*.bin
