@@ -31,6 +31,8 @@ static int IOSTAT = 2;
 
 static unsigned char IO[0x100]; // 256 Byte IO space
 
+static bool kbdUpperCase = false;
+
 
 void usage(const char* fullpath)
 {
@@ -44,10 +46,12 @@ void usage(const char* fullpath)
         "    -aDDSS  ACIA 6850 data / status register hex address\n"
         "    -b      treat infile as binary\n"
         "    -x      treat infile as hex\n"
-        "    -fXX    fill = 0x00 .. 0xFF\n"
         "    -c      offset = start = 0x100 (*.com format)\n"
         "    -oXXXX  offset = 0x0000 .. 0xFFFF\n"
-        "    -sXXXX  start  = 0x0000 .. 0xFFFF\n",
+        "    -sXXXX  start  = 0x0000 .. 0xFFFF\n"
+        "    -fXX    fill = 0x00 .. 0xFF\n"
+        "    -u      make KBD input char upper case\n"
+        "    -v      increase verbosity (to stderr)\n",
         progname);
 }
 
@@ -146,6 +150,9 @@ int main(int argc, char* argv[]) {
                     }
                     j = 0; // end of this arg group
                     break;
+                case 'u':
+                    kbdUpperCase = true;
+                    break;
                 case 'v':
                     ++verboseMode;
                     break;
@@ -218,7 +225,9 @@ int main(int argc, char* argv[]) {
                 enable_raw_mode();
                 int c = getchar();
                 disable_raw_mode();
-                if ( c == '\003' ) // ^C
+                if ( kbdUpperCase )
+                    c = toupper( c );
+                if ( c == '\033' ) // ESC
                     exit(-1);
                 return c == '\n' ? '\r' : char(c);
             }
@@ -242,7 +251,7 @@ int main(int argc, char* argv[]) {
     );
 
     if ( verboseMode )
-        z80.setDebugMessage([](void* arg, const char* msg) { puts(msg); });
+        z80.setDebugMessage([](void* arg, const char* msg) { fprintf(stderr, "%s\n", msg); });
 
     MSG(1, "Offset: $%04X, start: $%04X\n", offset, start);
 
